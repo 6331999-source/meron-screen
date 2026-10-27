@@ -606,6 +606,15 @@
   const online = /^https?:$/.test(location.protocol);
   if (online && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
+  // עותק מקומי (נפתח כשלא היה אינטרנט בהדלקה): כל דקה מנסים לעבור לאתר
+  if (!online && S.siteUrl) {
+    setInterval(() => {
+      const img = new Image();
+      img.onload = () => location.replace(S.siteUrl);
+      img.src = S.siteUrl + 'images/background.jpg?check=' + Date.now();
+    }, 60000);
+  }
+
   // הסרטון נשמר בקופסה, ואם אין אינטרנט מנגנים את העותק השמור
   const VCACHE = 'meron-videos', blobUrls = {};
   async function videoSrc(url) {

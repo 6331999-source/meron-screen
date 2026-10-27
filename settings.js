@@ -30,6 +30,8 @@ window.SETTINGS = {
 
   // כל כמה דקות המסך בודק אם עדכנת משהו באתר
   updateCheckMinutes: 3,
+  // כתובת האתר (העותק שבקופסה עובר אליה כשיש אינטרנט)
+  siteUrl: 'https://6331999-source.github.io/meron-screen/',
 
   // מיקום – מירון
   latitude: 32.9817,
