@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>זמני היום – מירון</title>
+<style>
+  @font-face { font-family: 'Heebo'; font-weight: 300; src: url(fonts/heebo-hebrew-300-normal.woff2) format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+  @font-face { font-family: 'Heebo'; font-weight: 400; src: url(fonts/heebo-hebrew-400-normal.woff2) format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+  @font-face { font-family: 'Heebo'; font-weight: 500; src: url(fonts/heebo-hebrew-500-normal.woff2) format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+  @font-face { font-family: 'Heebo'; font-weight: 700; src: url(fonts/heebo-hebrew-700-normal.woff2) format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+  @font-face { font-family: 'Heebo'; font-weight: 300; src: url(fonts/heebo-latin-300-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+  @font-face { font-family: 'Heebo'; font-weight: 400; src: url(fonts/heebo-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+  @font-face { font-family: 'Heebo'; font-weight: 500; src: url(fonts/heebo-latin-500-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+  @font-face { font-family: 'Heebo'; font-weight: 700; src: url(fonts/heebo-latin-700-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+  @font-face { font-family: 'Frank'; font-weight: 500; src: url(fonts/frank-ruhl-libre-hebrew-500-normal.woff2) format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+  @font-face { font-family: 'Frank'; font-weight: 700; src: url(fonts/frank-ruhl-libre-hebrew-700-normal.woff2) format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+  @font-face { font-family: 'Frank'; font-weight: 900; src: url(fonts/frank-ruhl-libre-hebrew-900-normal.woff2) format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+  @font-face { font-family: 'Frank'; font-weight: 700; src: url(fonts/frank-ruhl-libre-latin-700-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+
+  :root {
+    --night: #071226;
+    --navy: #0d1f3f;
+    --gold: #e8c46a;
+    --gold-hi: #fbe3a0;
+    --gold-lo: #b8893a;
+    --cream: #f4ead2;
+    --muted: #93a3c2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; cursor: none; }
+  body { font-family: 'Heebo', 'Noto Sans Hebrew', Arial, sans-serif; color: var(--cream); }
+
+  /* במה בגודל 1920x1080 שמוקטנת/מוגדלת לכל מסך */
+  #stage { position: absolute; width: 1920px; height: 1080px; left: 50%; top: 50%; transform-origin: center; }
+  .layer { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
+  .layer.show { opacity: 1; }
+
+  /* ---------- שכבת וידאו ---------- */
+  #videoLayer { background: #000; }
+  #video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+  /* סרטון אנכי: הסרטון באמצע, ומשני צדדיו שעון וזמנים */
+  .side { display: none; }
+  #videoLayer.portrait {
+    background:
+      radial-gradient(ellipse 1400px 700px at 50% 108%, rgba(232,160,80,.22), transparent 70%),
+      radial-gradient(ellipse 1200px 800px at 50% 30%, #12284f 0%, var(--night) 75%);
+  }
+  #videoLayer.portrait #video {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: auto; height: 100%;
+    border-left: 2px solid rgba(232,196,106,.55); border-right: 2px solid rgba(232,196,106,.55);
+    box-shadow: 0 0 80px rgba(0,0,0,.7);
+  }
+  #videoLayer.portrait #badge { display: none; }
+  #videoLayer.portrait .side {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: absolute; top: 0; bottom: 0; width: 640px; text-align: center;
+  }
+  .sideR { right: 0; } .sideL { left: 0; }
+  .s-place { font-size: 28px; letter-spacing: 6px; color: var(--gold); margin-bottom: 30px; }
+  .s-clock { direction: ltr; font-variant-numeric: tabular-nums; }
+  .s-clock span:first-child { font-size: 150px; font-weight: 300; line-height: 1; color: #fff; }
+  .s-clock .sec { font-size: 56px; color: var(--gold); margin-left: 8px; }
+  .s-day { margin-top: 34px; font-size: 32px; color: var(--muted); }
+  .s-heb { font-family: 'Frank', serif; font-weight: 700; font-size: 60px; color: var(--cream); }
+  .s-greg { font-size: 28px; color: var(--muted); }
+  .s-head { font-family: 'Frank', serif; font-weight: 700; font-size: 44px; color: var(--gold); margin-bottom: 24px; }
+  #sNext { width: 520px; }
+  .s-row { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 26px; border-radius: 16px; font-size: 34px; }
+  .s-row .t { font-size: 46px; font-weight: 500; font-variant-numeric: tabular-nums; color: #fff; }
+  .s-row.first { background: linear-gradient(270deg, var(--gold-hi), var(--gold) 60%, var(--gold-lo)); color: var(--night); font-weight: 700; }
+  .s-row.first .t { color: var(--night); font-weight: 700; }
+  .s-cd { font-size: 30px; margin: 8px 0 14px; color: var(--cream); }
+  .s-cd b { color: #fff; }
+  .sideBanner { margin-top: 30px; }
+  .sideBanner .banner { flex-direction: column; gap: 6px; font-size: 32px; padding: 18px 34px; max-width: 540px; }
+  .sideBanner .banner .note { display: block; margin: 2px 0 0; }
+  .sideBanner .banner .sep, .sideBanner .banner .ic, .sideBanner .footText { display: none; }
+
+  #badge {
+    position: absolute; left: 40px; bottom: 40px; display: flex; align-items: center; gap: 26px;
+    padding: 18px 32px; border-radius: 22px;
+    background: rgba(7, 18, 38, .78); border: 1px solid rgba(232, 196, 106, .45);
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  }
+  #badge .b-clock { font-size: 52px; font-weight: 500; color: var(--gold-hi); font-variant-numeric: tabular-nums; direction: ltr; }
+  #badge .b-sep { width: 1px; height: 56px; background: rgba(232,196,106,.4); }
+  #badge .b-next { font-size: 28px; line-height: 1.3; }
+  #badge .b-next small { display: block; font-size: 20px; color: var(--muted); }
+  #badge .b-next b { color: var(--gold); font-weight: 700; }
+
+  /* ---------- שכבת זמנים ---------- */
+  #zmanimLayer {
+    background:
+      radial-gradient(ellipse 1400px 700px at 50% 108%, rgba(232,160,80,.28), transparent 70%),
+      radial-gradient(ellipse 1200px 800px at 50% 30%, #12284f 0%, var(--night) 75%);
+    overflow: hidden;
+  }
+  /* תמונת רקע (הציון במירון) עם שכבה כהה כדי שהזמנים יהיו קריאים */
+  #bgPhoto { position: absolute; inset: 0; display: none; overflow: hidden; }
+  #bgPhoto .img { position: absolute; inset: 0; background-size: cover; background-position: center; animation: kenburns 40s ease-in-out infinite alternate; }
+  #bgPhoto .shade { position: absolute; inset: 0; }
+  #bgPhoto .credit { position: absolute; left: 60px; bottom: 36px; font-size: 16px; color: rgba(244,234,210,.45); }
+  @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.08); } }
+  #zmanimLayer.has-photo #bgPhoto { display: block; }
+  #zmanimLayer.has-photo #stars, #zmanimLayer.has-photo #mountains { display: none; }
+  /* צל מאחורי הטקסט כדי שיהיה קריא על התמונה */
+  .has-photo header, .has-photo .row, .has-photo .col h2, .has-photo #arc text, .has-photo .nextCard {
+    text-shadow: 0 2px 6px rgba(0,0,0,.85), 0 0 18px rgba(0,0,0,.6);
+  }
+  .has-photo .row.next { text-shadow: none; }
+  .has-photo .h-title h1 { text-shadow: none; filter: drop-shadow(0 3px 10px rgba(0,0,0,.95)); }
+  /* לוחות כהים שקופים מאחורי הזמנים */
+  .has-photo .col {
+    background: rgba(7,18,38,.78); border: 1px solid rgba(232,196,106,.35); border-radius: 24px;
+    padding: 16px 8px 14px; margin-top: -20px; height: 600px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.45);
+  }
+  .has-photo .col h2 { margin-top: 4px; }
+  .has-photo .nextCard { background: rgba(7,18,38,.82); }
+  .has-photo .h-date, .has-photo .h-clock {
+    background: rgba(7,18,38,.7); border-radius: 22px; padding: 14px 26px; width: auto;
+  }
+  .has-photo .row.past { opacity: .5; }
+  .has-photo .h-title .sub { display: inline-flex; background: rgba(7,18,38,.8); border-radius: 999px; padding: 4px 28px; }
+  .has-photo .h-title .sub::before, .has-photo .h-title .sub::after { display: none; }
+  #stars { position: absolute; inset: 0; }
+  .star { position: absolute; border-radius: 50%; background: #fff; animation: twinkle 4s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100% { opacity: .15 } 50% { opacity: .8 } }
+  #mountains { position: absolute; left: 0; right: 0; bottom: 0; width: 1920px; height: 260px; }
+
+  .frame {
+    position: absolute; inset: 26px; border-radius: 28px; pointer-events: none;
+    border: 1.5px solid rgba(232,196,106,.35);
+    box-shadow: inset 0 0 0 8px rgba(232,196,106,.04);
+  }
+  .frame::before, .frame::after {
+    content: '✦'; position: absolute; top: -20px; color: var(--gold); font-size: 30px;
+    background: var(--night); padding: 0 14px; line-height: 40px;
+  }
+  .frame::before { right: 120px; } .frame::after { left: 120px; }
+  .has-photo .frame::before, .has-photo .frame::after { background: none; text-shadow: 0 0 12px rgba(7,18,38,.9); }
+
+  header { position: absolute; top: 58px; left: 90px; right: 90px; height: 190px; display: flex; align-items: center; justify-content: space-between; }
+  .h-date { width: 470px; }
+  .h-date .day { font-size: 30px; color: var(--muted); letter-spacing: 1px; }
+  .h-date .heb { font-family: 'Frank', serif; font-weight: 700; font-size: 58px; color: var(--cream); line-height: 1.15; }
+  .h-date .greg { font-size: 26px; color: var(--muted); direction: rtl; }
+  .h-title { text-align: center; flex: 1; }
+  .h-title h1 {
+    font-family: 'Frank', serif; font-weight: 900; font-size: 112px; line-height: 1;
+    background: linear-gradient(180deg, var(--gold-hi) 10%, var(--gold) 55%, var(--gold-lo) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 4px 18px rgba(232,196,106,.25));
+  }
+  .h-title .sub { margin-top: 10px; font-size: 30px; letter-spacing: 12px; color: var(--gold); display: flex; align-items: center; justify-content: center; gap: 22px; }
+  .h-title .sub::before, .h-title .sub::after { content: ''; width: 90px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+  .h-title .sub::after { transform: scaleX(-1); }
+  .h-clock { width: 470px; text-align: left; direction: ltr; font-variant-numeric: tabular-nums; }
+  .h-clock .time { font-size: 124px; font-weight: 300; line-height: 1; color: #fff; letter-spacing: -2px; }
+  .h-clock .sec { font-size: 52px; color: var(--gold); font-weight: 400; margin-left: 6px; }
+
+  #pills { position: absolute; top: 262px; left: 0; right: 0; display: flex; justify-content: center; gap: 18px; height: 54px; }
+  .pill {
+    padding: 8px 30px; border-radius: 999px; font-size: 28px; font-weight: 500;
+    color: var(--gold-hi); background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.5);
+  }
+
+  main { position: absolute; top: 340px; left: 90px; right: 90px; height: 560px; display: flex; gap: 50px; }
+  .col { flex: 1; display: flex; flex-direction: column; }
+  .col h2 { font-family: 'Frank', serif; font-weight: 700; font-size: 34px; color: var(--gold); margin: 0 18px 10px; display: flex; align-items: center; gap: 16px; }
+  .col h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(270deg, rgba(232,196,106,.6), transparent); }
+  .row {
+    display: flex; align-items: baseline; height: 62px; padding: 0 22px; border-radius: 14px;
+    transition: background .6s, color .6s, opacity .6s;
+  }
+  .row .name { font-size: 33px; font-weight: 400; white-space: nowrap; }
+  .row .name small { font-size: 22px; color: var(--muted); font-weight: 400; }
+  .row.next .name small { color: rgba(7,18,38,.7); }
+  .row .dots { flex: 1; margin: 0 16px; border-bottom: 2px dotted rgba(232,196,106,.28); transform: translateY(-9px); }
+  .row .t { font-size: 44px; font-weight: 500; font-variant-numeric: tabular-nums; color: #fff; direction: ltr; }
+  .row.past { opacity: .38; }
+  .row.next {
+    background: linear-gradient(270deg, var(--gold-hi), var(--gold) 60%, var(--gold-lo));
+    box-shadow: 0 8px 30px rgba(232,196,106,.35);
+  }
+  .row.next .name { color: var(--night); font-weight: 700; }
+  .row.next .t { color: var(--night); font-weight: 700; }
+  .row.next .dots { border-color: rgba(7,18,38,.35); }
+
+  .center { width: 560px; display: flex; flex-direction: column; align-items: center; }
+  #arc { width: 560px; height: 290px; }
+  .nextCard {
+    margin-top: 18px; width: 500px; padding: 26px 30px 30px; text-align: center; border-radius: 26px;
+    background: linear-gradient(180deg, rgba(232,196,106,.16), rgba(232,196,106,.04));
+    border: 1px solid rgba(232,196,106,.45);
+  }
+  .nextCard .lbl { font-size: 24px; letter-spacing: 6px; color: var(--muted); }
+  .nextCard .nm { font-family: 'Frank', serif; font-weight: 700; font-size: 50px; color: var(--gold-hi); margin-top: 4px; }
+  .nextCard .cd { font-size: 40px; font-weight: 300; margin-top: 4px; }
+  .nextCard .cd b { font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+
+  footer { position: absolute; bottom: 70px; left: 0; right: 0; display: flex; justify-content: center; }
+  .banner {
+    display: flex; align-items: center; gap: 34px; padding: 18px 50px; border-radius: 22px;
+    background: rgba(7,18,38,.82); border: 1.5px solid var(--gold);
+    box-shadow: 0 0 40px rgba(232,196,106,.25); font-size: 36px;
+  }
+  .banner .ic { font-size: 44px; }
+  .banner b { color: var(--gold-hi); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .banner .note { font-size: 24px; color: var(--muted); margin-right: 8px; }
+  .banner .sep { width: 1px; height: 46px; background: rgba(232,196,106,.5); }
+  .footText { font-size: 32px; color: var(--cream); background: rgba(7,18,38,.6); padding: 12px 40px; border-radius: 18px; }
+
+  #progress { position: absolute; bottom: 26px; right: 54px; left: 54px; height: 4px; border-radius: 4px; background: rgba(232,196,106,.12); overflow: hidden; }
+  #progress i { display: block; height: 100%; width: 0; background: linear-gradient(270deg, var(--gold-hi), var(--gold-lo)); }
+
+  /* ---------- עיצוב בהיר: שיש, כחול וזהב, כמו השלטים בתצוגה ---------- */
+  body.theme-light { --ink: #16264f; --blue: #1f3c8c; --blue-hi: #3358b8; --muted: #6d7895; --paper: #f5f0e6; }
+  .theme-light #zmanimLayer {
+    background:
+      repeating-linear-gradient(118deg, transparent 0 90px, rgba(120,105,80,.05) 92px 94px, transparent 96px 230px),
+      repeating-linear-gradient(64deg, transparent 0 160px, rgba(120,105,80,.04) 161px 162px, transparent 164px 400px),
+      radial-gradient(ellipse 1300px 760px at 50% 40%, #fbf8f2 0%, #ece4d4 100%);
+  }
+  .theme-light #stars, .theme-light #mountains { display: none; }
+  .theme-light .frame {
+    inset: 22px; border-radius: 34px; border: 4px solid var(--blue);
+    box-shadow: inset 0 0 0 7px var(--paper), inset 0 0 0 9px var(--gold-lo), 0 0 0 7px rgba(31,60,140,.08);
+  }
+  .theme-light .frame::before, .theme-light .frame::after { content: '❖'; color: var(--gold-lo); background: #f3ede1; top: -22px; font-size: 32px; }
+  .theme-light header, .theme-light .row, .theme-light .nextCard { color: var(--ink); }
+  .theme-light .h-date .heb { color: var(--ink); }
+  .theme-light .h-title h1 { background: linear-gradient(180deg, var(--blue-hi) 0%, var(--blue) 55%, #14286a 100%); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 3px 0 rgba(184,137,58,.35)); }
+  .theme-light .h-title .sub { color: var(--gold-lo); font-weight: 500; }
+  .theme-light .h-title .sub::before, .theme-light .h-title .sub::after { background: linear-gradient(90deg, transparent, var(--gold-lo)); }
+  .theme-light .h-clock .time { color: var(--ink); font-weight: 400; }
+  .theme-light .h-clock .sec { color: var(--gold-lo); }
+  .theme-light .pill { color: var(--blue); background: rgba(31,60,140,.07); border-color: rgba(31,60,140,.4); }
+  .theme-light .col h2 { color: var(--blue); }
+  .theme-light .col h2::after { background: linear-gradient(270deg, rgba(184,137,58,.7), transparent); }
+  .theme-light .row .t { color: var(--ink); font-weight: 600; }
+  .theme-light .row .dots { border-color: rgba(31,60,140,.22); }
+  .theme-light .row.past { opacity: .4; }
+  .theme-light .row.next { background: linear-gradient(270deg, var(--blue-hi), var(--blue) 70%, #17306f); box-shadow: 0 8px 26px rgba(31,60,140,.3), inset 0 0 0 2px rgba(232,196,106,.7); }
+  .theme-light .row.next .name, .theme-light .row.next .t { color: #fff; }
+  .theme-light .row.next .name small { color: rgba(255,255,255,.75); }
+  .theme-light .row.next .dots { border-color: rgba(255,255,255,.35); }
+  .theme-light .nextCard { background: rgba(255,255,255,.72); border: 2px solid var(--gold-lo); box-shadow: 0 10px 30px rgba(90,70,40,.12); }
+  .theme-light .nextCard .nm { color: var(--blue); }
+  .theme-light .nextCard .cd b { color: var(--ink); }
+  .theme-light #arc text { fill: var(--muted); }
+  .theme-light #arc g circle:first-child { fill: #c9b27a; }
+  .theme-light #arc g circle:last-child { fill: #f1ebdf; }
+  .theme-light .banner { background: rgba(255,255,255,.88); color: var(--ink); border: 2px solid var(--gold-lo); box-shadow: 0 8px 30px rgba(90,70,40,.15); }
+  .theme-light .banner b { color: var(--blue); }
+  .theme-light .footText { background: rgba(255,255,255,.75); color: var(--ink); }
+  .theme-light #progress { background: rgba(31,60,140,.1); }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <div id="videoLayer" class="layer">
+    <div class="side sideR">
+      <div class="s-place">✦ זמני היום · מירון ✦</div>
+      <div class="s-clock"><span id="sClock">--:--</span><span class="sec" id="sSec">00</span></div>
+      <div class="s-day" id="sDay"></div>
+      <div class="s-heb" id="sHeb"></div>
+      <div class="s-greg" id="sGreg"></div>
+    </div>
+    <video id="video" muted playsinline preload="auto"></video>
+    <div class="side sideL">
+      <div class="s-head">הזמנים הבאים</div>
+      <div id="sNext"></div>
+      <div class="sideBanner" id="sBanner"></div>
+    </div>
+    <div id="badge">
+      <div class="b-clock" id="bClock">--:--</div>
+      <div class="b-sep"></div>
+      <div class="b-next" id="bNext"></div>
+    </div>
+  </div>
+
+  <div id="zmanimLayer" class="layer show">
+    <div id="bgPhoto"><div class="img"></div><div class="shade"></div><div class="credit" id="bgCredit"></div></div>
+    <div id="stars"></div>
+    <svg id="mountains" viewBox="0 0 1920 260" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2f55"/><stop offset="1" stop-color="#0a1630"/></linearGradient>
+        <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f2042"/><stop offset="1" stop-color="#050c1c"/></linearGradient>
+      </defs>
+      <path fill="url(#m1)" d="M0 170 C180 120 300 140 420 110 C560 75 640 120 760 90 C860 64 930 40 1010 52 C1100 66 1180 30 1270 44 C1380 62 1460 110 1580 98 C1700 86 1800 120 1920 108 L1920 260 L0 260Z"/>
+      <path fill="url(#m2)" d="M0 210 C150 180 260 200 380 182 C520 160 620 196 760 176 C900 156 980 186 1110 170 C1260 150 1380 192 1530 178 C1680 164 1800 196 1920 186 L1920 260 L0 260Z"/>
+    </svg>
+    <div class="frame"></div>
+
+    <header>
+      <div class="h-date">
+        <div class="day" id="dayName"></div>
+        <div class="heb" id="hebDate"></div>
+        <div class="greg" id="gregDate"></div>
+      </div>
+      <div class="h-title">
+        <h1 id="title"></h1>
+        <div class="sub" id="subtitle"></div>
+      </div>
+      <div class="h-clock"><span class="time" id="clock">--:--</span><span class="sec" id="sec">00</span></div>
+    </header>
+
+    <div id="pills"></div>
+
+    <main>
+      <div class="col" id="colMorning"><h2>שחרית</h2></div>
+      <div class="center">
+        <svg id="arc" viewBox="0 0 560 290"></svg>
+        <div class="nextCard">
+          <div class="lbl">הזמן הבא</div>
+          <div class="nm" id="nextName"></div>
+          <div class="cd" id="nextCd"></div>
+        </div>
+      </div>
+      <div class="col" id="colEvening"><h2>מנחה וערבית</h2></div>
+    </main>
+
+    <footer id="footer"></footer>
+    <div id="progress"><i id="progressBar"></i></div>
+  </div>
+
+</div>
+
+<script src="settings.js"></script>
+<script src="zmanim.js"></script>
+<script>
+(function () {
+  'use strict';
+  const S = window.SETTINGS, Z = window.Zmanim;
+  const $ = id => document.getElementById(id);
+  const TZ = 'Asia/Jerusalem';
+
+  // ---- בדיקות: index.html?t=2026-10-23T16:00&mode=zmanim ----
+  const params = new URLSearchParams(location.search);
+  let offset = 0;
+  if (params.get('t')) {
+    const [d, tm = '12:00'] = params.get('t').split('T');
+    const [y, m, dd] = d.split('-').map(Number), [hh, mi] = tm.split(':').map(Number);
+    // השעה שנכתבה היא שעון ישראל
+    const guess = Date.UTC(y, m - 1, dd, hh, mi);
+    const il = israelParts(new Date(guess));
+    offset = guess - (Date.UTC(il.y, il.m - 1, il.d, il.h, il.mi) - guess) - Date.now();
+  }
+  const now = () => new Date(Date.now() + offset);
+  const forcedMode = params.get('mode');
+
+  // ---- התאמת הבמה לגודל המסך ----
+  function fit() {
+    const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+    $('stage').style.transform = `translate(-50%,-50%) scale(${k})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  // ---- כלי זמן ----
+  function israelParts(date) {
+    const p = {};
+    for (const x of new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' }).formatToParts(date)) p[x.type] = +x.value;
+    return { y: p.year, m: p.month, d: p.day, h: p.hour, mi: p.minute, s: p.second };
+  }
+  const hm = d => d ? new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d) : '--:--';
+  const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  const MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+
+  // [מפתח, שם, שיטה] – לפי לוח "עתים לבינה"
+  const MORNING = [
+    ['alos90', 'עלות השחר', '90 במע׳'], ['alos72', 'עלות השחר', '72 במע׳'],
+    ['misheyakir', 'ציצית ותפילין', ''], ['sunrise', 'הנץ החמה', 'במישור'],
+    ['shemaMGA', 'סוזק״ש מג״א', '72 במע׳'], ['shemaGRA', 'סוזק״ש גר״א', ''],
+    ['tefilaMGA', 'סוזת״פ מג״א', '72 במע׳'], ['tefilaGRA', 'סוזת״פ גר״א', ''],
+  ];
+  const EVENING = [
+    ['chatzos', 'חצות היום', ''], ['minchaGedola', 'מנחה גדולה', ''], ['minchaKetana', 'מנחה קטנה', ''],
+    ['plag', 'פלג המנחה', ''], ['sunset', 'שקיעה', 'במישור'], ['tzeisGeonim', 'צאה״כ גאונים', ''],
+    ['tzeis', 'צאת הכוכבים', ''], ['tzeisRT', 'צאה״כ ר״ת', '72 במע׳'],
+  ];
+  const ALL = MORNING.concat(EVENING);
+
+  // ---- בניית השורות ----
+  const rows = {};
+  function buildCol(colId, list) {
+    for (const [key, name, method] of list) {
+      const r = document.createElement('div');
+      r.className = 'row';
+      r.innerHTML = `<span class="name">${name}${method ? ` <small>${method}</small>` : ''}</span><span class="dots"></span><span class="t"></span>`;
+      $(colId).appendChild(r);
+      rows[key] = r;
+    }
+  }
+  buildCol('colMorning', MORNING); buildCol('colEvening', EVENING);
+  $('title').textContent = S.title; $('subtitle').textContent = S.subtitle;
+  // עיצוב: 'dark' (כחול לילה) או 'light' (שיש בהיר). אפשר גם ?theme=light לבדיקה
+  if ((params.get('theme') || S.theme) === 'light') document.body.classList.add('theme-light');
+
+  // תמונת רקע. אם התמונה חסרה, נשאר רקע הכוכבים
+  if (S.backgroundImage) {
+    const img = new Image();
+    img.onload = () => {
+      const k = S.backgroundDarkness ?? 0.45;
+      document.querySelector('#bgPhoto .img').style.backgroundImage = `url("${S.backgroundImage}")`;
+      // מרכז התמונה בהיר יותר, והצדדים (מאחורי הזמנים) קצת כהים יותר
+      document.querySelector('#bgPhoto .shade').style.background =
+        `linear-gradient(90deg, rgba(7,18,38,${Math.min(1, k + 0.2)}) 0%, rgba(7,18,38,${k}) 33%, rgba(7,18,38,${Math.max(0, k - 0.15)}) 50%, rgba(7,18,38,${k}) 67%, rgba(7,18,38,${Math.min(1, k + 0.2)}) 100%),
+         linear-gradient(180deg, rgba(7,18,38,${Math.min(1, k + 0.4)}) 0%, rgba(7,18,38,${Math.min(1, k + 0.3)}) 20%, transparent 32%, transparent 78%, rgba(7,18,38,${Math.min(1, k + 0.2)}) 100%)`;
+      $('bgCredit').textContent = S.backgroundCredit || '';
+      $('zmanimLayer').classList.add('has-photo');
+    };
+    img.src = S.backgroundImage;
+  }
+
+  // כוכבים
+  (function stars() {
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    let html = '';
+    for (let i = 0; i < 90; i++) {
+      const sz = rnd() < .85 ? 2 : 3;
+      html += `<i class="star" style="left:${rnd() * 1920}px;top:${rnd() * 760}px;width:${sz}px;height:${sz}px;animation-delay:${-rnd() * 4}s;animation-duration:${3 + rnd() * 4}s"></i>`;
+    }
+    $('stars').innerHTML = html;
+  })();
+
+  // ---- חישוב יומי ----
+  let day = null;
+  function computeDay(p) {
+    const key = `${p.y}-${p.m}-${p.d}`;
+    if (day && day.key === key) return day;
+    const tom = Z.shiftDate(p.y, p.m, p.d, 1);
+    day = {
+      key, ymd: [p.y, p.m, p.d],
+      z: Z.calcZmanim(p.y, p.m, p.d, S),
+      zTom: Z.calcZmanim(...tom, S),
+      info: Z.dayInfo(p.y, p.m, p.d),
+      infoTom: Z.dayInfo(...tom),
+    };
+    $('gregDate').textContent = `${p.d} ב${MONTHS[p.m - 1]} ${p.y}`;
+    return day;
+  }
+
+  const holy = i => i.shabbat || i.yomTov;
+  function holyLabel(i) { return i.yomTov ? (i.shabbat ? 'שבת ו' + i.name : i.name) : 'שבת'; }
+  // מוצא את סוף רצף של שבת/חג שמתחיל ביום הנתון
+  function holyEnd(ymd) {
+    let cur = ymd;
+    for (let i = 0; i < 4; i++) {
+      const nx = Z.shiftDate(...cur, 1);
+      if (!holy(Z.dayInfo(...nx))) break;
+      cur = nx;
+    }
+    const info = Z.dayInfo(...cur);
+    return { time: Z.calcZmanim(...cur, S).tzeisShabbat, word: info.yomTov && !info.shabbat ? 'צאת החג' : 'צאת השבת' };
+  }
+
+  // אחרי השקיעה היום ההלכתי הוא כבר מחר
+  function footerHtml(afterSunset) {
+    let { info, infoTom, z, ymd } = day;
+    if (afterSunset) {
+      ymd = Z.shiftDate(...ymd, 1); info = infoTom; infoTom = Z.dayInfo(...Z.shiftDate(...ymd, 1));
+      if (holy(info) && holy(infoTom)) {
+        const end = holyEnd(ymd);
+        return `<div class="banner"><span class="ic">✨</span><span>${holyLabel(info)} · ${end.word} <b>${hm(end.time)}</b></span></div>`;
+      }
+      z = day.zTom;
+    }
+    if (holy(infoTom) && !holy(info)) {
+      const end = holyEnd(Z.shiftDate(...ymd, 1));
+      return `<div class="banner"><span class="ic">🕯️</span><span>${holyLabel(infoTom)} · הדלקת נרות <b>${hm(z.candles)}</b>
+        <small class="note">(${S.candleLightingMinutes} דק׳ לפני השקיעה)</small></span>
+        <span class="sep"></span><span>${end.word} <b>${hm(end.time)}</b></span></div>`;
+    }
+    if (holy(info) && holy(infoTom)) {
+      const end = holyEnd(ymd);
+      return `<div class="banner"><span class="ic">🕯️</span><span>הדלקת נרות לאחר <b>${hm(z.tzeisShabbat)}</b></span>
+        <span class="sep"></span><span>${end.word} <b>${hm(end.time)}</b></span></div>`;
+    }
+    if (holy(info)) {
+      const end = holyEnd(ymd);
+      return `<div class="banner"><span class="ic">✨</span><span>${holyLabel(info)} · ${end.word} <b>${hm(end.time)}</b></span></div>`;
+    }
+    return S.footerText ? `<div class="footText">${S.footerText}</div>` : '';
+  }
+
+  // ---- קשת השמש ----
+  const ARC = { cx: 280, cy: 250, r: 220 };
+  function arcPoint(f) { const a = Math.PI * f; return [ARC.cx + ARC.r * Math.cos(a), ARC.cy - ARC.r * Math.sin(a)]; }
+  function drawArc(t, z) {
+    const { sunrise, sunset } = z;
+    const f = (t - sunrise) / (sunset - sunrise);
+    const isDay = f >= 0 && f <= 1;
+    const [x0, y0] = arcPoint(0), [x1, y1] = arcPoint(1);
+    let done = '', body = '';
+    if (isDay) {
+      const [sx, sy] = arcPoint(f);
+      done = `<path d="M${x0} ${y0} A${ARC.r} ${ARC.r} 0 0 0 ${sx} ${sy}" stroke="url(#ag)" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+      body = `<circle cx="${sx}" cy="${sy}" r="34" fill="url(#glow)"/><circle cx="${sx}" cy="${sy}" r="17" fill="#fbe3a0"/>`;
+    } else {
+      body = `<g transform="translate(${ARC.cx} ${ARC.cy - 120})"><circle r="30" fill="#f4ead2"/><circle cx="13" cy="-9" r="27" fill="#0f2346"/></g>
+        <text x="${ARC.cx}" y="${ARC.cy - 46}" text-anchor="middle" fill="#93a3c2" font-size="24">לילה</text>`;
+    }
+    $('arc').innerHTML = `
+      <defs>
+        <linearGradient id="ag" x1="1" x2="0"><stop offset="0" stop-color="#b8893a"/><stop offset="1" stop-color="#fbe3a0"/></linearGradient>
+        <radialGradient id="glow"><stop offset="0" stop-color="#fbe3a0" stop-opacity=".9"/><stop offset="1" stop-color="#e8c46a" stop-opacity="0"/></radialGradient>
+      </defs>
+      <line x1="20" y1="${ARC.cy}" x2="540" y2="${ARC.cy}" stroke="rgba(232,196,106,.35)" stroke-width="1.5"/>
+      <path d="M${x0} ${y0} A${ARC.r} ${ARC.r} 0 0 0 ${x1} ${y1}" stroke="rgba(232,196,106,.3)" stroke-width="2.5" stroke-dasharray="3 10" fill="none" stroke-linecap="round"/>
+      ${done}${body}
+      <text x="${x0}" y="${ARC.cy + 34}" text-anchor="middle" fill="#93a3c2" font-size="22">הנץ ${hm(sunrise)}</text>
+      <text x="${x1}" y="${ARC.cy + 34}" text-anchor="middle" fill="#93a3c2" font-size="22">שקיעה ${hm(sunset)}</text>`;
+  }
+
+  function countdown(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    if (h > 0) return `בעוד <b>${h}:${String(m).padStart(2, '0')}</b> שעות`;
+    if (m >= 10) return `בעוד <b>${m}</b> דקות`;
+    return `בעוד <b>${m}:${String(sec).padStart(2, '0')}</b> דקות`;
+  }
+
+  // ---- עדכון כל שנייה ----
+  let lastPills = '', lastFooter = null, lastList = null;
+  function tick() {
+    const t = now(), p = israelParts(t);
+    const d = computeDay(p);
+    const afterSunset = t > d.z.sunset;
+    // אחרי צאת הכוכבים לר״ת מציגים כבר את הזמנים של מחר
+    const showTom = t > d.z.tzeisRT;
+    const z = showTom ? d.zTom : d.z;
+    const listKey = d.key + showTom;
+    if (listKey !== lastList) {
+      lastList = listKey;
+      for (const [k] of ALL) rows[k].querySelector('.t').textContent = hm(z[k]);
+      $('colMorning').querySelector('h2').textContent = showTom ? 'שחרית – מחר' : 'שחרית';
+      $('colEvening').querySelector('h2').textContent = showTom ? 'מנחה וערבית – מחר' : 'מנחה וערבית';
+    }
+    // ביציאת שבת/חג ההודעה נשארת עד צאת השבת
+    const leaving = holy(d.info) && !holy(d.infoTom) && t < d.z.tzeisShabbat;
+    const footNight = afterSunset && !leaving;
+    const footKey = d.key + footNight;
+    if (footKey !== lastFooter) { lastFooter = footKey; $('footer').innerHTML = footerHtml(footNight); }
+
+    $('clock').textContent = `${String(p.h).padStart(2, '0')}:${String(p.mi).padStart(2, '0')}`;
+    $('sec').textContent = String(p.s).padStart(2, '0');
+    $('bClock').textContent = $('clock').textContent;
+
+    // תאריך עברי מתחלף בשקיעה
+    const hebInfo = afterSunset ? d.infoTom : d.info;
+    $('dayName').textContent = afterSunset ? `ליל ${DAYS[d.infoTom.weekday] === 'שבת' ? 'שבת קודש' : 'יום ' + DAYS[d.infoTom.weekday]}` : (d.info.shabbat ? 'שבת קודש' : `יום ${DAYS[d.info.weekday]}`);
+    $('hebDate').textContent = (afterSunset ? 'אור ל' : '') + Z.hebDateText(hebInfo.heb);
+
+    // תגיות מיוחדות
+    const pills = [];
+    if (hebInfo.name) pills.push(hebInfo.name);
+    if (hebInfo.roshChodesh) pills.push('ראש חודש ' + hebInfo.roshChodesh);
+    if (hebInfo.omer) pills.push(`${afterSunset ? 'הלילה' : 'היום'} ${Z.gematria(hebInfo.omer)} לעומר`);
+    const ph = pills.map(x => `<span class="pill">${x}</span>`).join('');
+    if (ph !== lastPills) { $('pills').innerHTML = ph; lastPills = ph; }
+
+    // הזמן הבא
+    let next = null;
+    for (const [k, name] of ALL) {
+      const past = z[k] && z[k] <= t;
+      rows[k].classList.toggle('past', past);
+      rows[k].classList.remove('next');
+      if (!past && !next && z[k]) next = { k, name, time: z[k] };
+    }
+    if (next) rows[next.k].classList.add('next');
+    else next = { name: 'עלות השחר', time: d.zTom.alos90, tomorrow: true };
+    $('nextName').textContent = next.name + (next.tomorrow ? ' (מחר)' : '');
+    $('nextCd').innerHTML = `${countdown(next.time - t)} · ${hm(next.time)}`;
+    $('bNext').innerHTML = `<small>הזמן הבא</small><b>${next.name}</b> ${hm(next.time)}`;
+
+    // צדדים לסרטון אנכי
+    $('sClock').textContent = $('clock').textContent;
+    $('sSec').textContent = $('sec').textContent;
+    $('sDay').textContent = $('dayName').textContent;
+    $('sHeb').textContent = $('hebDate').textContent;
+    $('sGreg').textContent = $('gregDate').textContent;
+    const upcoming = ALL.filter(([k]) => z[k] > t).map(([k, name]) => [name, z[k]])
+      .concat(ALL.filter(([k]) => d.zTom[k] > t && z !== d.zTom).map(([k, name]) => [name, d.zTom[k]]))
+      .slice(0, 3);
+    $('sNext').innerHTML = upcoming.map(([name, time], i) =>
+      `<div class="s-row${i ? '' : ' first'}"><span>${name}</span><span class="t">${hm(time)}</span></div>` +
+      (i ? '' : `<div class="s-cd">${countdown(time - t)}</div>`)).join('');
+    if ($('sBanner').innerHTML !== $('footer').innerHTML) $('sBanner').innerHTML = $('footer').innerHTML;
+
+    drawArc(t, z);
+  }
+
+  // ---- מחזור: זמנים ← סרטון ← זמנים ----
+  const video = $('video');
+  video.muted = !S.videoSound;
+  const videos = (S.videos || []).filter(Boolean);
+  let vIndex = 0, plays = 0, phaseTimer = null, phaseStart = 0, phaseLen = 0;
+  $('badge').style.display = S.showBadgeOnVideo ? '' : 'none';
+
+  // ---- עבודה דרך האינטרנט: עותק שמור בקופסה ועדכון מרחוק ----
+  const online = /^https?:$/.test(location.protocol);
+  if (online && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+  // הסרטון נשמר בקופסה, ואם אין אינטרנט מנגנים את העותק השמור
+  const VCACHE = 'meron-videos', blobUrls = {};
+  async function videoSrc(url) {
+    if (!online || !('caches' in window)) return url;
+    if (blobUrls[url]) return blobUrls[url];
+    try {
+      const cache = await caches.open(VCACHE);
+      let res = null;
+      try {
+        const r = await fetch(url, { cache: 'no-cache' });
+        if (r.ok) { await cache.put(url, r.clone()); res = r; }
+      } catch (e) { /* אין אינטרנט */ }
+      if (!res) res = await cache.match(url);
+      if (!res) return url;
+      return (blobUrls[url] = URL.createObjectURL(await res.blob()));
+    } catch (e) { return url; }
+  }
+  // מחיקת סרטונים ישנים שכבר לא ברשימה
+  if (online && 'caches' in window) caches.open(VCACHE).then(c => c.keys().then(keys => keys.forEach(k => {
+    if (!videos.some(v => new URL(v, location.href).href === k.url)) c.delete(k);
+  }))).catch(() => {});
+
+  // כל כמה דקות בודקים אם משהו השתנה באתר (הגדרות, תוכנה או סרטון), ואם כן מרעננים
+  async function siteSignature() {
+    const parts = [];
+    for (const f of ['index.html', 'settings.js', 'zmanim.js']) {
+      const r = await fetch(f, { cache: 'no-cache' });
+      if (!r.ok) throw new Error(f);
+      parts.push(await r.text());
+    }
+    for (const v of videos) {
+      const r = await fetch(v, { method: 'HEAD', cache: 'no-cache' });
+      parts.push(r.headers.get('etag') || r.headers.get('last-modified') || r.headers.get('content-length') || r.status);
+    }
+    return parts.join('|');
+  }
+  if (online) {
+    let sig = null;
+    const check = () => siteSignature().then(s => {
+      if (sig !== null && s !== sig) location.reload();
+      sig = s;
+    }).catch(() => { /* אין אינטרנט – ממשיכים עם מה שיש */ });
+    check();
+    setInterval(check, params.get('check') ? params.get('check') * 1000 : (S.updateCheckMinutes || 3) * 60000);
+  }
+
+  function showZmanim() {
+    $('zmanimLayer').classList.add('show');
+    $('videoLayer').classList.remove('show');
+    phaseStart = Date.now(); phaseLen = S.zmanimSeconds * 1000;
+    clearTimeout(phaseTimer);
+    if (forcedMode === 'zmanim' || !videos.length) { phaseLen = 0; return; }
+    videoSrc(videos[vIndex % videos.length]).then(src => { video.src = src; video.load(); });
+    phaseTimer = setTimeout(showVideo, phaseLen);
+  }
+
+  function showVideo() {
+    plays = 0;
+    video.play().then(() => {
+      $('videoLayer').classList.add('show');
+      $('zmanimLayer').classList.remove('show');
+      phaseLen = 0;
+    }).catch(() => { vIndex++; showZmanim(); });
+  }
+
+  video.addEventListener('loadedmetadata', () => {
+    $('videoLayer').classList.toggle('portrait', video.videoWidth < video.videoHeight);
+  });
+  video.addEventListener('ended', () => {
+    plays++;
+    if (plays < S.videoPlaysBeforeZmanim) { video.currentTime = 0; video.play(); return; }
+    vIndex++;
+    showZmanim();
+  });
+  video.addEventListener('error', () => { if ($('videoLayer').classList.contains('show')) { vIndex++; showZmanim(); } });
+
+  setInterval(() => {
+    const pr = phaseLen ? Math.min(1, (Date.now() - phaseStart) / phaseLen) : 0;
+    $('progressBar').style.width = (pr * 100) + '%';
+  }, 200);
+
+  // אחרי שינה של המכשיר המסך עלול להישאר לבן – מרעננים כשחוזרים
+  let hiddenAt = 0, lastTick = Date.now();
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hiddenAt = Date.now();
+    else if (hiddenAt && Date.now() - hiddenAt > 60000) location.reload();
+  });
+  // אם השעון "קפץ" (המכשיר היה מושהה), מרעננים
+  setInterval(() => {
+    if (Date.now() - lastTick > 120000) location.reload();
+    lastTick = Date.now();
+  }, 5000);
+
+  // רענון יומי בשלוש בלילה, נגד תקיעות במכשיר שדולק כל הזמן
+  const bootAt = Date.now();
+  setInterval(() => {
+    const p = israelParts(new Date());
+    if (p.h === 3 && p.mi === 0 && Date.now() - bootAt > 3600000) location.reload();
+  }, 30000);
+
+  tick(); setInterval(tick, 1000);
+  showZmanim();
+})();
+</script>
+</body>
+</html>
